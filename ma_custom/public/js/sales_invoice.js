@@ -10,14 +10,14 @@ frappe.ui.form.on("Sales Invoice", {
 						target: frm,
 						setters: {
 							supplier: undefined,
+							bill_no: undefined,
+							grand_total: undefined,
+							currency: undefined,
 						},
 						get_query_filters: {
 							docstatus: 1,
 							company: frm.doc.company,
 						},
-						allow_child_item_selection: true,
-						child_fieldname: "items",
-						child_columns: ["item_code", "item_name", "qty", "amount"],
 					});
 					if (d && d.dialog) {
 						d.dialog.$wrapper.find(".btn-secondary-dark").hide();

@@ -30,6 +30,13 @@ def get_columns() -> list[dict]:
 			"width": 180,
 		},
 		{
+			"label": _("Currency"),
+			"fieldname": "currency",
+			"fieldtype": "Link",
+			"options": "Currency",
+			"width": 90,
+		},
+		{
 			"label": _("Purchase Invoices"),
 			"fieldname": "purchase_invoice_count",
 			"fieldtype": "Int",
@@ -39,19 +46,28 @@ def get_columns() -> list[dict]:
 			"label": _("Purchase Invoice Total"),
 			"fieldname": "purchase_invoice_total",
 			"fieldtype": "Currency",
+			"options": "currency",
 			"width": 180,
 		},
 		{
 			"label": _("Sales Invoice Total"),
 			"fieldname": "sales_invoice_total",
 			"fieldtype": "Currency",
+			"options": "currency",
 			"width": 170,
 		},
 		{
 			"label": _("Gross Profit"),
 			"fieldname": "gross_profit",
 			"fieldtype": "Currency",
+			"options": "currency",
 			"width": 150,
+		},
+		{
+			"label": _("Gross Profit %"),
+			"fieldname": "gross_profit_percentage",
+			"fieldtype": "Percent",
+			"width": 140,
 		},
 	]
 
@@ -69,7 +85,7 @@ def get_data(filters: frappe._dict) -> list[dict]:
 		.select(
 			sii.parent.as_("sales_invoice"),
 			Count(sii.custom_purchase_invoice).distinct().as_("pi_count"),
-			Sum(pii.base_net_amount).as_("pi_total"),
+			Sum(pii.net_amount).as_("pi_total"),
 		)
 		.where(sii.docstatus == 1)
 		.where(sii.custom_purchase_invoice.isnotnull())
@@ -84,10 +100,11 @@ def get_data(filters: frappe._dict) -> list[dict]:
 		.select(
 			si.customer,
 			si.name.as_("sales_invoice"),
+			si.currency,
 			Coalesce(pi_stats.pi_count, 0).as_("purchase_invoice_count"),
 			Coalesce(pi_stats.pi_total, 0).as_("purchase_invoice_total"),
-			si.base_grand_total.as_("sales_invoice_total"),
-			(si.base_grand_total - Coalesce(pi_stats.pi_total, 0)).as_("gross_profit"),
+			si.grand_total.as_("sales_invoice_total"),
+			(si.grand_total - Coalesce(pi_stats.pi_total, 0)).as_("gross_profit"),
 		)
 		.where(si.docstatus == 1)
 		.where(si.company == filters.company)
@@ -102,4 +119,10 @@ def get_data(filters: frappe._dict) -> list[dict]:
 	if filters.to_date:
 		query = query.where(si.posting_date <= filters.to_date)
 
-	return query.run(as_dict=True)
+	rows = query.run(as_dict=True)
+	for row in rows:
+		sales_total = row["sales_invoice_total"] or 0
+		row["gross_profit_percentage"] = (
+			(row["gross_profit"] / sales_total * 100) if sales_total else 0
+		)
+	return rows

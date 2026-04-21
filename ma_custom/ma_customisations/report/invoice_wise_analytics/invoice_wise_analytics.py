@@ -59,14 +59,17 @@ def get_columns() -> list[dict]:
 def get_data(filters: frappe._dict) -> list[dict]:
 	si = frappe.qb.DocType("Sales Invoice")
 	sii = frappe.qb.DocType("Sales Invoice Item")
+	pii = frappe.qb.DocType("Purchase Invoice Item")
 
-	# Subquery: per Sales Invoice, count distinct PIs and sum item amounts from PI-sourced items
+	# Subquery: per Sales Invoice, count distinct PIs and sum cost from the linked PI items
 	pi_stats = (
 		frappe.qb.from_(sii)
+		.left_join(pii)
+		.on(sii.custom_purchase_invoice_item == pii.name)
 		.select(
 			sii.parent.as_("sales_invoice"),
 			Count(sii.custom_purchase_invoice).distinct().as_("pi_count"),
-			Sum(sii.base_amount).as_("pi_total"),
+			Sum(pii.base_net_amount).as_("pi_total"),
 		)
 		.where(sii.docstatus == 1)
 		.where(sii.custom_purchase_invoice.isnotnull())

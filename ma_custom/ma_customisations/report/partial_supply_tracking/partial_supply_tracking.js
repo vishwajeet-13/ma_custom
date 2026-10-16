@@ -52,6 +52,13 @@ frappe.query_reports["Partial Supply Tracking"] = {
 		if (data && column.fieldname === "sales_order" && data.indent === 0 && !data.item_code) {
 			return `<b>${data.sales_order}</b>`;
 		}
+		if (
+			data &&
+			data.indent === 1 &&
+			["ordered_qty", "supplied_qty", "pending_qty"].includes(column.fieldname)
+		) {
+			return "";
+		}
 		value = default_formatter(value, row, column, data);
 		if (data && data.indent === 0) {
 			value = `<b>${value}</b>`;

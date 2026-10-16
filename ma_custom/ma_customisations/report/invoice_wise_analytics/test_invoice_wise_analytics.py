@@ -87,9 +87,15 @@ class TestInvoiceWiseAnalytics(IntegrationTestCase):
 		cls.company = _default_company()
 		cls.debit_to = _first_account(cls.company, "Receivable")
 		cls.credit_to = _first_account(cls.company, "Payable")
-		cls.income_account = frappe.db.get_value("Company", cls.company, "default_income_account") or _first_account(cls.company, "Income Account")
-		cls.expense_account = frappe.db.get_value("Company", cls.company, "default_expense_account") or _first_account(cls.company, "Cost of Goods Sold")
-		cls.cost_center = frappe.db.get_value("Company", cls.company, "cost_center") or frappe.db.get_value("Cost Center", {"company": cls.company, "is_group": 0}, "name")
+		cls.income_account = frappe.db.get_value(
+			"Company", cls.company, "default_income_account"
+		) or _first_account(cls.company, "Income Account")
+		cls.expense_account = frappe.db.get_value(
+			"Company", cls.company, "default_expense_account"
+		) or _first_account(cls.company, "Cost of Goods Sold")
+		cls.cost_center = frappe.db.get_value("Company", cls.company, "cost_center") or frappe.db.get_value(
+			"Cost Center", {"company": cls.company, "is_group": 0}, "name"
+		)
 		cls.warehouse = _first_warehouse(cls.company)
 		cls.customer = _ensure_customer("_IWA Test Customer")
 		cls.customer2 = _ensure_customer("_IWA Test Customer 2")
@@ -173,9 +179,7 @@ class TestInvoiceWiseAnalytics(IntegrationTestCase):
 			]
 		)
 
-		_, data = execute(
-			frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate())
-		)
+		_, data = execute(frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate()))
 		row = self._row_for(data, si.name)
 
 		self.assertEqual(row.purchase_invoice_count, 1)
@@ -199,9 +203,7 @@ class TestInvoiceWiseAnalytics(IntegrationTestCase):
 			]
 		)
 
-		_, data = execute(
-			frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate())
-		)
+		_, data = execute(frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate()))
 		row = self._row_for(data, si.name)
 
 		self.assertEqual(row.purchase_invoice_count, 2)
@@ -218,9 +220,7 @@ class TestInvoiceWiseAnalytics(IntegrationTestCase):
 			]
 		)
 
-		_, data = execute(
-			frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate())
-		)
+		_, data = execute(frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate()))
 		row = self._row_for(data, si.name)
 
 		self.assertEqual(row.purchase_invoice_count, 1)
@@ -230,9 +230,7 @@ class TestInvoiceWiseAnalytics(IntegrationTestCase):
 	def test_standalone_si_has_zero_pi_cost(self):
 		si = self._make_si([{"qty": 1, "rate": 100}])
 
-		_, data = execute(
-			frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate())
-		)
+		_, data = execute(frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate()))
 		row = self._row_for(data, si.name)
 
 		self.assertEqual(row.purchase_invoice_count, 0)
@@ -253,9 +251,7 @@ class TestInvoiceWiseAnalytics(IntegrationTestCase):
 		si_other_cust = self._make_si([{"qty": 1, "rate": 100}], customer=self.customer2)
 
 		# Date filter excludes old invoice
-		_, data = execute(
-			frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate())
-		)
+		_, data = execute(frappe._dict(company=self.company, from_date=nowdate(), to_date=nowdate()))
 		invoices = {row["sales_invoice"] for row in data}
 		self.assertIn(si_today.name, invoices)
 		self.assertNotIn(si_old.name, invoices)

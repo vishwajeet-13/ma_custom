@@ -122,7 +122,5 @@ def get_data(filters: frappe._dict) -> list[dict]:
 	rows = query.run(as_dict=True)
 	for row in rows:
 		sales_total = row["sales_invoice_total"] or 0
-		row["gross_profit_percentage"] = (
-			(row["gross_profit"] / sales_total * 100) if sales_total else 0
-		)
+		row["gross_profit_percentage"] = (row["gross_profit"] / sales_total * 100) if sales_total else 0
 	return rows

@@ -82,6 +82,26 @@ class TestQuotationMarkup(IntegrationTestCase):
 		markup = self._make_markup([(self.items[0], 3, 0.1, 10)])
 		self.assertEqual(markup.items[0].profit, 0.03)
 
+	def test_totals_are_rounded(self):
+		markup = self._make_markup([(self.items[0], 1, 0.1, 0), (self.items[1], 1, 0.2, 0)])
+		self.assertEqual((markup.total_cost, markup.total_selling_amount), (0.3, 0.3))
+
+	def test_submit_blocked_with_zero_qty(self):
+		markup = self._make_markup([(self.items[0], 0, 100, 10)])
+		self.assertRaisesRegex(frappe.ValidationError, "greater than 0 on row\\(s\\) 1", markup.submit)
+
+	def test_excel_import_rejects_bad_numbers(self):
+		xlsx = make_xlsx(
+			[["Item Name", "Qty", "Cost Rate"], [self.items[0], "N/A", 100], [self.items[1], 2, 50]],
+			"Sheet1",
+		)
+		self.assertRaisesRegex(
+			frappe.ValidationError,
+			"Excel row\\(s\\): 2$",
+			get_items_from_excel,
+			base64.b64encode(xlsx.getvalue()).decode(),
+		)
+
 	def test_submit_blocked_without_item(self):
 		markup = self._make_markup([(self.items[0], 1, 100, 10), (None, 1, 100, 10)])
 		self.assertRaisesRegex(frappe.ValidationError, "row\\(s\\) 2", markup.submit)

@@ -63,9 +63,18 @@ function calculate_row(row) {
 
 function refresh_items(frm) {
 	const items = frm.doc.items || [];
-	frm.doc.total_cost = items.reduce((sum, row) => sum + flt(row.cost_amount), 0);
-	frm.doc.total_selling_amount = items.reduce((sum, row) => sum + flt(row.selling_amount), 0);
-	frm.doc.total_markup = frm.doc.total_selling_amount - frm.doc.total_cost;
+	frm.doc.total_cost = flt(
+		items.reduce((sum, row) => sum + flt(row.cost_amount), 0),
+		precision("total_cost", frm.doc)
+	);
+	frm.doc.total_selling_amount = flt(
+		items.reduce((sum, row) => sum + flt(row.selling_amount), 0),
+		precision("total_selling_amount", frm.doc)
+	);
+	frm.doc.total_markup = flt(
+		frm.doc.total_selling_amount - frm.doc.total_cost,
+		precision("total_markup", frm.doc)
+	);
 	["items", "total_cost", "total_selling_amount", "total_markup"].forEach((field) =>
 		frm.refresh_field(field)
 	);

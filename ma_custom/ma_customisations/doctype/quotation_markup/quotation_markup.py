@@ -28,13 +28,17 @@ class QuotationMarkup(Document):
 			row.selling_amount = flt(flt(row.qty) * row.selling_rate, row.precision("selling_amount"))
 			row.profit = flt(row.selling_amount - row.cost_amount, row.precision("profit"))
 
-		self.total_cost = sum(row.cost_amount for row in self.items)
-		self.total_selling_amount = sum(row.selling_amount for row in self.items)
-		self.total_markup = self.total_selling_amount - self.total_cost
+		self.total_cost = flt(sum(row.cost_amount for row in self.items), self.precision("total_cost"))
+		self.total_selling_amount = flt(
+			sum(row.selling_amount for row in self.items), self.precision("total_selling_amount")
+		)
+		self.total_markup = flt(self.total_selling_amount - self.total_cost, self.precision("total_markup"))
 
 	def before_submit(self):
 		if missing := [str(row.idx) for row in self.items if not row.item_code]:
 			frappe.throw(_("Select an Item on row(s) {0} before submitting.").format(", ".join(missing)))
+		if zero_qty := [str(row.idx) for row in self.items if flt(row.qty) <= 0]:
+			frappe.throw(_("Qty must be greater than 0 on row(s) {0}.").format(", ".join(zero_qty)))
 
 	def on_submit(self):
 		quotation = frappe.get_doc(
@@ -93,17 +97,21 @@ def get_items_from_excel(file_content: str) -> list[dict]:
 		frappe.throw(_("Missing column(s) in the Excel: {0}").format(", ".join(missing)))
 	index = {fieldname: header.index(label) for label, fieldname in EXCEL_COLUMNS.items()}
 
-	items = []
-	for row in rows[header_idx + 1 :]:
+	items, invalid = [], []
+	for excel_row, row in enumerate(rows[header_idx + 1 :], start=header_idx + 2):
 		item_name = str(row[index["excel_item_name"]] or "").strip()
 		if item_name:
-			items.append(
-				{
-					"excel_item_name": item_name,
-					"qty": flt(row[index["qty"]]),
-					"cost_rate": flt(row[index["cost_rate"]]),
-				}
+			qty, cost_rate = flt(row[index["qty"]]), flt(row[index["cost_rate"]])
+			if qty <= 0 or cost_rate <= 0:
+				invalid.append(str(excel_row))
+			items.append({"excel_item_name": item_name, "qty": qty, "cost_rate": cost_rate})
+
+	if invalid:
+		frappe.throw(
+			_("Qty and Cost Rate must be numbers greater than 0. Fix Excel row(s): {0}").format(
+				", ".join(invalid)
 			)
+		)
 
 	matches = match_items({d["excel_item_name"] for d in items})
 	for d in items:

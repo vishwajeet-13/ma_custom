@@ -192,6 +192,7 @@ class TestInvoiceWiseAnalytics(IntegrationTestCase):
 			(si.grand_total - 100.0) / si.grand_total * 100,
 		)
 
+	@IntegrationTestCase.change_settings("Selling Settings", allow_multiple_items=1)
 	def test_multiple_pis_linked_to_single_si(self):
 		pi1 = self._make_pi(qty=1, rate=40)  # cost 40
 		pi2 = self._make_pi(qty=3, rate=60)  # cost 180
@@ -210,6 +211,7 @@ class TestInvoiceWiseAnalytics(IntegrationTestCase):
 		self.assertEqual(row.purchase_invoice_total, 40.0 + 180.0)
 		self.assertEqual(row.gross_profit, si.grand_total - 220.0)
 
+	@IntegrationTestCase.change_settings("Selling Settings", allow_multiple_items=1)
 	def test_si_with_mixed_linked_and_standalone_items(self):
 		pi = self._make_pi(qty=2, rate=50)  # cost = 100
 

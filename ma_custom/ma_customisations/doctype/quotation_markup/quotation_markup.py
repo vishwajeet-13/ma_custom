@@ -26,7 +26,7 @@ class QuotationMarkup(Document):
 			)
 			row.cost_amount = flt(flt(row.qty) * flt(row.cost_rate), row.precision("cost_amount"))
 			row.selling_amount = flt(flt(row.qty) * row.selling_rate, row.precision("selling_amount"))
-			row.profit = row.selling_amount - row.cost_amount
+			row.profit = flt(row.selling_amount - row.cost_amount, row.precision("profit"))
 
 		self.total_cost = sum(row.cost_amount for row in self.items)
 		self.total_selling_amount = sum(row.selling_amount for row in self.items)

@@ -40,6 +40,9 @@ frappe.ui.form.on("Quotation Markup Item", {
 	cost_rate: on_row_change,
 	markup_percentage: on_row_change,
 	item_code: (frm) => highlight_unmatched(frm),
+	items_add(frm, cdt, cdn) {
+		frappe.model.set_value(cdt, cdn, "markup_percentage", frm.doc.markup_percentage);
+	},
 	items_remove: (frm) => refresh_items(frm),
 });
 
@@ -55,7 +58,7 @@ function calculate_row(row) {
 	);
 	row.cost_amount = flt(flt(row.qty) * flt(row.cost_rate), precision("cost_amount", row));
 	row.selling_amount = flt(flt(row.qty) * row.selling_rate, precision("selling_amount", row));
-	row.profit = row.selling_amount - row.cost_amount;
+	row.profit = flt(row.selling_amount - row.cost_amount, precision("profit", row));
 }
 
 function refresh_items(frm) {

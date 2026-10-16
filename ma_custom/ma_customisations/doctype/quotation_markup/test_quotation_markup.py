@@ -78,6 +78,10 @@ class TestQuotationMarkup(IntegrationTestCase):
 		self.assertEqual([row.discount_percentage for row in quotation.items], [0, 0, 0])
 		self.assertEqual(quotation.grand_total, 3350)
 
+	def test_profit_is_rounded(self):
+		markup = self._make_markup([(self.items[0], 3, 0.1, 10)])
+		self.assertEqual(markup.items[0].profit, 0.03)
+
 	def test_submit_blocked_without_item(self):
 		markup = self._make_markup([(self.items[0], 1, 100, 10), (None, 1, 100, 10)])
 		self.assertRaisesRegex(frappe.ValidationError, "row\\(s\\) 2", markup.submit)

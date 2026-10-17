@@ -14,16 +14,21 @@ from ma_custom.ma_customisations.report.invoice_wise_analytics.test_invoice_wise
 )
 
 IGNORE_TEST_RECORD_DEPENDENCIES = ["Company", "Currency", "Customer", "Item", "Quotation", "UOM"]
+ITEM_GROUP = "_QM Test Item Group"
 
 
 def _ensure_item(code: str, item_name: str | None = None) -> str:
+	if not frappe.db.exists("Item Group", ITEM_GROUP):
+		frappe.get_doc(
+			{"doctype": "Item Group", "item_group_name": ITEM_GROUP, "parent_item_group": "All Item Groups"}
+		).insert(ignore_permissions=True)
 	if not frappe.db.exists("Item", code):
 		frappe.get_doc(
 			{
 				"doctype": "Item",
 				"item_code": code,
 				"item_name": item_name or code,
-				"item_group": frappe.db.get_value("Item Group", {"is_group": 0}, "name"),
+				"item_group": ITEM_GROUP,
 				"stock_uom": "Nos",
 				"is_stock_item": 0,
 			}

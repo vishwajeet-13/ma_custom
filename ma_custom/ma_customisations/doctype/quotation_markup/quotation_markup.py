@@ -83,7 +83,7 @@ class QuotationMarkup(Document):
 		return frappe.db.get_value("Quotation", self.quotation, "docstatus") if self.quotation else None
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def get_items_from_excel(file_content: str) -> list[dict]:
 	frappe.has_permission("Quotation Markup", "create", throw=True)
 
@@ -127,11 +127,11 @@ def match_items(names: set[str]) -> dict[str, tuple[str, str]]:
 	filters = {"disabled": 0, "has_variants": 0}
 	fields = ["name", "item_name", "stock_uom"]
 
-	by_code = frappe.get_all("Item", filters={**filters, "name": ["in", list(names)]}, fields=fields)
+	by_code = frappe.get_list("Item", filters={**filters, "name": ["in", list(names)]}, fields=fields)
 	matches = {d.name.lower(): (d.name, d.stock_uom) for d in by_code}
 
 	if remaining := [name for name in names if name.lower() not in matches]:
-		by_name = frappe.get_all("Item", filters={**filters, "item_name": ["in", remaining]}, fields=fields)
+		by_name = frappe.get_list("Item", filters={**filters, "item_name": ["in", remaining]}, fields=fields)
 		counts = Counter(d.item_name.lower() for d in by_name)
 		for d in by_name:
 			if counts[d.item_name.lower()] == 1:
